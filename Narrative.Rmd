@@ -1,0 +1,95 @@
+---
+title: "Narrative"
+author: "Retika Vijay"
+date: "10/12/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+require("knitr")
+opts_knit$set(root.dir = "C:/Users/Retika Vijay/Documents/plsc31101-final-project")
+```
+
+Objective of the project 
+
+Elections to the state and national legislatures in India do not take place at the same time. While national parliamentary elections take place for the whole country every five years, elections to the state legislatures are not synchronized. Thus, different states conduct elections to their respective legislatures in different years for a 5 year period. TO this end, the consitutency boundaries for state and national elections are different. The number of constituencies for state and national elections, within a state also differ. 
+
+Similarly, political parties in India exist along 2 tiers- national- level and state- level. The two main national parties of the country, are the Bharatita Janata Party (BJP) and the Indian National Congress (INC). Whie the BJP lies firmly in the right- wing of the political spectrum, the INC's position has traditionally been left of centre. Several state parties exist in every state. Their presence in the national legislature in minimal, as their voter- base is limited by state boundaries. That said, some state parties have presence in more than one state too. 
+
+It is widely believed in India, today, that voters' party preferences change depending on whether the elections are to the national legislature or the state legislature. In case of a national election, their party of choice is the right- wing, national party - Bharatiya Janata Party or the BJP. For state elections, voters prefer to stick to their traditional allegiances, which are mostly to regional or specific state- based political parties. This trend has been highlighted and framed as one that has emerged since the BJP's sweeping electoral victory in the 2014 national/ parliamentary elections. For, despite their unprecedented mandate in the 2014 elections, their performance in subsequent state elections has not lived upto expectations. This is the case even in those states, that voted for the party in the 2014 national elections. This beleief was bolstered in the national elections held in 2019, wherein the BJP once again secured a majority. However, again, its performance in state elections subsequently has not been great. 
+
+This has led political pundits in the country to claim that voters' have begun to differentiate between national and state elections and vote for different parties accordingly. This, they claim, is a trend that began in 2014. While, it is true that, before 2014, loyalties to state- based parties stretched across state and national elections, it is the aim of this project to show that voting patterns have differed within a state, for state and national elections, since the beginning of the 21st century. 
+
+To do this, this project examines and compares the election results of state and national elections for the past decade (2009- 2019), in two states- Karnataka and Kerala. The reason for choosing Karnataka is that unlike most states in India, it does not have a political party that has traditionally commanded the loyalty of the people of the state. The elections held in the state, have tended therefore, to bring to power different political parties across different years. The election results are therefore, as free of party loyalty as possible in a country like India. The reason for choosing Kerala, is the exact opposite. The state has staunchly been an supporter of the COmmunist Party of India and has no history of voting for right- wing parties of the country, even after the right-wing shift in the country since 2014. 
+
+A comparison of the election results for these two states, should show us the extent of difference that exists in voting patterns between state and national elections, with and without party loyalty as a factor of consideration. 
+
+The specific election years within this time- frame are as follows:
+
+1) National elections- 2009, 2014, 2019
+
+State elections:
+
+a) Karnataka- 2013, 2018
+
+b) Kerala- 2011, 2016
+
+It is a matter of luck that in the dataset under observation, there is a state election held between every national election for both the states. This makes a comparison of voting patterns even more comprehensive. 
+
+Cleaning/ pre- processing the data 
+
+The election data was sourced from the Election Commission of India's website. However, the data was not available in a uniform format. First, the election result, whether national or state, by constituency for every state has been made available by the ECI in a .csv file, for elections held since 2014. Election results by constituency, before that are available in a .pdf format. Second, the structure and format of the .pdf files is not uniform. Thus, the use of R to clean the data was not feasible. The data was cleaned manually and is stored in the folder called 'data'. 
+
+Main challenge faced 
+
+The initial attempt of the project was to map the winning party of each constituency for each election, on a state map of Karnataka and Kerala, with constituency boundaries. With a colour representing each party, visually it would be possible to see how the same constituency may have voted differently in a state and national election. 
+
+However, such a map is not available. It was my intention to map the constituency- wise results on a map of India with state boundaries. I had to settle on using ggplot2 for this purpose, as opposed to the other packages that could be used for the purpose fo mapping. This was because, packages like maptools, sf, sp and rgdal require CRS points of the places that are being mapped to use their functions directly. But I was unable to find such data for the constituencies of India. States in America seem to be denoted by what is called FIPS, among other common coding mechanisms, which are unavailable for India. 
+
+To use ggplot2, I undertook the following steps:
+
+1) Created an API with Google Maps. Queried Google Maps to find out the longitude and latitude of constituencies for both the state and national elections. Even in this step, a problem that emerged was that some of the constituency names were not recognized by Google Maps. There were some NA values in the datframe therefore. Moreover, some of the coordinates were of places elesewhere in the country that shared the same name. 
+
+2) Used ggplot2 to plot the longitude and latitude of each consituency using geom_point. Thus, every point represented a constituency and the colour of the point represented the party that won in the constituency (this could be achieved using the fill function). However, since some constituency names were confused with other places in the country, there were some outlier points, that I planned to trim. 
+
+3) Found a shapefile of the Indian map with state boundaries. Used the rgdal package to read it into R. The intention was to combine the geom_point function with the geom_polygon function that would contain my shapefile, using the ggplot2 package. 
+
+
+4) Used the broom package to create a dataframe from the Spatial Polygon that I read into R. 
+
+4) The next step was to merge the metadata from the Spatial Polygon Data Frame with the data that I wanted to map on the shapefile of India. In other words to map the points that I had created using geom_point on the shapefile. I had to merge the metadata of the shapefile with the datframe consisting of the list of constituencies and the parties that won in each constituency.
+
+5) To do this, I needed a common variable between the 2 dataframes. This variable had to be the column containing the places in both the datframes. This is necessary to be able to map the desired results propery.  
+
+
+6) I therefore, checked the constituent parts of the Spatial Polygon Dataframe, to see the columns contained in the dataframe.I then subset the column that was named 'Name2', which represents the lower unit of geogrphical boundaries, which in this case turned out to be a list of the states of India. Since the lowest unit of boundary available was the state boundaries, I could not merge it with my dataframe which consisted of a list of constituencies, which is a more disaggregated geographical boundary. 
+
+Thus, I could not create a map of Kerala and Karnataka using ggplot2, with the points representing individual constituencies and the colour of the points representing the party that won, because a shapefile of India with constituency boundaries is not available.
+
+I tried to make the map with the shapefile of a district map. However, that too was unfeasible because every district consists of several constituencies, each of which may have voted for different political parties. Thus, mapping by district would also not have been an option. 
+
+It would also not have been possible to create a state- wise map of election results to compare with a map of national election results, because state elections do not take place in a single year for all states. Rather, all states have a different 5- year cycle. Thus, no uniform dataset would be available, wherein I could plot election data for every state instead of for every constituency.  
+
+Making a Chloropleth map too did not seem to be meaningful, as it can be used to map only one variable at a time, and thus would not have been useful for a comparative purpose. 
+
+Alternative found 
+
+In order to display the results that I desired, with the data that I had available, the best option available to me was to use ggplot2 to create graphs wherein I could compare the seats won by each party in state and national elections. Since there are several political parties that win seats in an election in India's multiparty system, it would be best for the purposes of comparison to limit the number of parties displayed to 3 or 4. The parties that won at least 10% of the seats are represented individually. The rest are clubbed under the head of 'Others'. 
+
+In Karnantaka therefore, the parties represented individually are the BJP and the INC, while the rest are clubbed under 'Others'. In Kerala, the parties represented individually are the Communist Party of India- Marxist (CPM), Muslim Union League (MUL), the INC and the rest are clubbed under 'others'. 
+
+There are 2 sets of graphs for each state. They are as follows-
+
+1) A dodged bar plot that represents the percentage of seats won by the parties in question across state and national elections. Percentage of seats would allow a more feasibe comparison as the number of seats in a state and national election are different. 
+
+2) A grid of donut charts that represent the actual number of seats won by the parties in question, in state and national elections separately. 
+
+These graphs help us to visually see and compare the number and percentage of seats won by the main political parties in Kerala and karnataka across state and national elections from 2009- 2019. 
+
+Future work 
+
+What I would like to try in the future is to create a Spatial Polygon myself using the coordinates of the constituencies. While I am not sure if this would help in achieving the kind of map that I visulaize, I believe the sf package gives us some sort of tool to create such a polygon. 
+
+However, in the absence of maps with constituency level data, I would think that the project that I have undertaken will be difficult to accomplish. 
+
+In that sense, the greatest learning from this project has been that it is of foremost importance to find the requisite data needed for a proect and mentally map how that data is to be analyzed using R, before actually embarking on creating the project in R. 

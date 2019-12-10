@@ -1,0 +1,187 @@
+---
+title: "Karnataka elections"
+author: "Retika Vijay"
+date: "04/12/2019"
+output: html_document
+---
+```{r setup, include=FALSE, echo=FALSE}
+require("knitr")
+opts_knit$set(root.dir = "C:/Users/Retika Vijay/Documents/plsc31101-final-project")
+```
+
+Packages needed for this project 
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(purrr)
+library(stringr)
+library(ggpubr)
+```
+
+Reading the data on Karnataka elections into R
+
+```{r}
+kar_2009 <- read_csv("data/2009_karnataka.csv")
+kar_2013 <- read_csv("data/2013_karnataka.csv")
+kar_2014 <- read_csv("data/2014_karnataka.csv")
+kar_2018 <- read_csv("data/2018_karnataka.csv")
+kar_2019 <- read_csv("data/2019_karnataka.csv")
+```
+
+Changing the names of the columns of the dataframes and calculating the number of seats won by each party in every election
+
+```{r}
+
+#Parliamentary elections of 2009
+
+names(kar_2009) <- c("constituency_no", "constituency", "party_2009")
+winning_parties_09 <- as.data.frame(table(kar_2009$party_2009))
+
+# Assembly elections of 2013
+
+names(kar_2013) <- c("constituency_no", "constituency", "party_2013")
+winning_parties_13 <- as.data.frame(table(kar_2013$party_2013))
+
+#Parliamentary elections of 2014
+
+names(kar_2014) <- c("constituency_no", "constituency", "party_2014")
+winning_parties_14 <- as.data.frame(table(kar_2014$party_2014))
+
+#Assembly elections of 2018
+
+names(kar_2018) <- c("constituency_no", "constituency", "party_2018")
+winning_parties_18 <- as.data.frame(table(kar_2018$party_2018))
+
+#Parliamentary elections of 2019
+
+names(kar_2019) <- c("constituency_no", "constituency", "party_2019")
+winning_parties_19 <- as.data.frame(table(kar_2019$party_2019))
+```
+
+Creating functions do make donut charts of election results for assembly and parliamentary elections 
+
+```{r}
+
+#Colour scheme for the charts 
+
+my_cols <- c("#ff9933", "#3CB371", "#B0E0E6")
+
+#Function to make a donut chart for parliamentary elections 
+pie_parliamentary <- function(i){
+  pie_year = ggplot(i, aes(x= 2, y= Freq, fill=Var1))+
+  geom_bar(stat="identity", width=1, color = "white")+
+  coord_polar(theta = "y", start=0)+
+  geom_text(aes(y = Freq, label = Freq), position = position_stack(vjust = 0.5), fontface="bold")+
+  scale_fill_manual(values = my_cols)+
+  xlim(0.5, 2.5)+
+  annotate(geom = 'text', x = 0.5, y = 0, label = "Total \n = 28")+
+  labs(fill = "Parties")+
+  theme_void()
+  
+  return(pie_year)
+}
+
+#Function to make a donut chart for assembly elections 
+pie_assembly <- function(i){
+  pie_year = ggplot(i, aes(x = 2, y= Freq, fill=Var1)) +
+  geom_bar(stat="identity", width=1, color = "white")+
+  coord_polar(theta = "y", start=0)+
+  geom_text(aes(y = Freq, label = Freq), position = position_stack(vjust = 0.5), fontface="bold")+
+  scale_fill_manual(values = my_cols)+
+  xlim(0.5, 2.5)+
+  annotate(geom = 'text', x = 0.5, y = 0, label = "Total \n = 224")+
+  labs(fill = "Parties")+
+  theme_void()
+  
+  return(pie_year)
+}
+```
+
+Applying the functions to create the donut chart for every election
+
+```{r}
+pie_2009 <- pie_parliamentary(winning_parties_09)
+
+pie_2013 <- pie_assembly(winning_parties_13)
+
+pie_2014 <- pie_parliamentary(winning_parties_14)
+
+pie_2018 <- pie_assembly(winning_parties_18)
+
+pie_2019 <- pie_parliamentary(winning_parties_19)
+```
+
+Creating a grid consisting of all the donut charts for easy comparison 
+
+```{r}
+all_years <- ggarrange(pie_2009, pie_2013, pie_2014, pie_2018, pie_2019, 
+                       labels = c("2009\n(Parliamentary)", "2013\n(Assembly)", "2014\n(Parliamentary)", "2018\n(Assembly)", "2019\n(Parliamentary)"),
+                       font.label = list(size = 7, color = "black"),
+                       nrow= 3, ncol = 2, common.legend = T, legend = "bottom")
+all_years <- annotate_figure(all_years, top = text_grob("No. of seats won by parties", face = "bold"), left = text_grob("Parliamentary Elections", face = "bold", rot = 90), right = text_grob("State Elections", face = "bold", rot = 90))
+```
+
+Adding columns of the total number of seats and the year of election to each dataframe consisting of the number of seats won by each party
+
+```{r}
+#2009
+winning_parties_09$total <- 28
+winning_parties_09$year <- 2009
+#2013
+winning_parties_13$total1 <- 224
+winning_parties_13$year <- 2013
+#2014
+winning_parties_14$total <- 28
+winning_parties_14$year <- 2014
+#2018
+winning_parties_18$total1 <- 224
+winning_parties_18$year <- 2018
+#2019
+winning_parties_19$total <- 28
+winning_parties_19$year <- 2019
+```
+
+Creating a function to calculate the percentage of total seats won by each party in elections under consideration
+
+```{r}
+
+percent <- function(i){
+  i = i%>%
+    mutate(perc_won = i[,2]/i[,3]*100)
+  return(i)
+}
+```
+
+Creating a dataframe of all the data collected thus far (party, year, total seats, no. of seats won, percentage of seats won)
+
+```{r}
+list_winning_parties <- list(winning_parties_09, winning_parties_13, winning_parties_14, winning_parties_18, winning_parties_19)
+
+perc_party <- map_dfr(list_winning_parties, percent)%>%
+  unite(total_seats, c(total, total1), remove = TRUE)%>%
+  mutate(total_seats = str_replace_all(total_seats, '_NA,?', ''))%>%
+  mutate(total_seats = str_replace_all(total_seats, 'NA_,?', ''))
+  
+```
+
+Creating a dodge bar plot of the percentage of seats won by the parties across assembly and parliamentary elections 
+
+```{r}
+Kar_plot <- ggplot(data = perc_party, aes(x = year, y = perc_won))+
+  geom_bar(stat = "identity", aes(fill = Var1), position = "dodge")+
+  scale_x_continuous(breaks = unique(perc_party$year), 
+                   labels = c("2009-parliamentary \n elections", "2013-state elections", "2014-parliamentary elections", "2018-state elections", "2019-parliamentary elections") )+
+  theme(axis.text.x = element_text(angle = 45, size = 8, hjust = 1))+
+  scale_fill_manual(values = my_cols)+
+  labs(fill = "Parties", title = "Percentage of seats won by each party")
+```
+
+Saving the plots 
+
+```{r}
+ggsave(filename = "karnataka elections.jpeg", plot = Kar_plot)
+
+ggsave(filename = "karnataka pie-charts.jpeg", plot = all_years)
+```
+
